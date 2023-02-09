@@ -67,7 +67,11 @@ const App = () => {
       {error && <p>Something went wrong: {error.message}</p>}
       <Searchbar onSubmit={onSubmit} onChange={handleChange} query={query} />
       <ImageGallery images={images} onShow={onShow} />
-      {images.length && <Button onClick={handleLoadMore} />}
+      {images.length > 0 && !isLoading ? (
+        <Button onClick={handleLoadMore} />
+      ) : (
+        ''
+      )}
       {isLoading && <Loader />}
       {showModal && <Modal onClose={onClose} image={largeImageURL} />}
     </div>
