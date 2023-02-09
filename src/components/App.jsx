@@ -1,87 +1,77 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import css from './App.module.css';
 
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 
-import { fetchImg } from '../services/PixabayApi';
+import fetchImg from '../services/PixabayApi';
 import Button from './Button/Button';
 import Loader from './Loader/Loader';
 import Modal from './Modal/Modal';
 
-class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    images: [],
-    error: null,
-    isLoading: false,
-    showModal: false,
-    largeImageURL: '',
-    webformatURL: '',
-  };
+const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImage] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [largeImageURL, setLargeImageURL] = useState('');
 
-  onSubmit = e => {
+  const onSubmit = e => {
     e.preventDefault();
-    if (this.state.query.trim() === '') {
-      alert('Enter your search query');
+    if (query.trim() === '') {
+      alert.error('Enter your search query');
       return;
     }
 
-    this.setState({ images: [], page: 1 }, () => {
-      this.fetchQuery(this.state.query);
-    });
+    setImage([]);
+    setPage(1);
+    fetchQuery(1);
   };
 
-  handleChange = e => {
-    this.setState({ query: e.target.value.toLowerCase() });
+  const handleChange = e => {
+    setQuery(e.target.value.toLowerCase());
   };
 
-  fetchQuery = async valueQuery => {
-    this.setState({ isLoading: true, error: null });
+  const fetchQuery = async page => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetchImg(valueQuery, this.state.page);
-      this.setState(prevState => ({
-        images: [...prevState.images, ...response],
-      }));
+      const response = await fetchImg(query, page);
+      setImage(prevState => [...prevState, ...response]);
     } catch (error) {
-      this.setState({ error });
+      setError(error);
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  handleLoadMore = () => {
-    this.setState({ page: this.state.page + 1 }, () => {
-      this.fetchQuery(this.state.query);
-    });
+  const handleLoadMore = () => {
+    setPage(page + 1);
+    fetchQuery(query + 1);
   };
 
-  onShow = url => {
-    this.setState({ showModal: true, largeImageURL: url });
+  const onShow = url => {
+    setShowModal(true);
+    setLargeImageURL(url);
   };
 
-  onClose = () => {
-    this.setState({ showModal: false, largeImageURL: '' });
+  const onClose = () => {
+    setShowModal(false);
+    setLargeImageURL('');
   };
 
-  render() {
-    const { images, isLoading, largeImageURL, showModal } = this.state;
-
-    return (
-      <div className={css.App}>
-        <Searchbar
-          onSubmit={this.onSubmit}
-          onChange={this.handleChange}
-          query={this.state.query}
-        />
-        <ImageGallery images={images} onShow={this.onShow} />
-        {images.length && <Button onClick={this.handleLoadMore} />}
-        {isLoading && <Loader />}
-        {showModal && <Modal onClose={this.onClose} image={largeImageURL} />}
-      </div>
-    );
-  }
-}
+  return (
+    <div className={css.App}>
+      {error && <p>Something went wrong: {error.message}</p>}
+      <Searchbar onSubmit={onSubmit} onChange={handleChange} query={query} />
+      <ImageGallery images={images} onShow={onShow} />
+      {images.length && <Button onClick={handleLoadMore} />}
+      {isLoading && <Loader />}
+      {showModal && <Modal onClose={onClose} image={largeImageURL} />}
+    </div>
+  );
+};
 
 export default App;
